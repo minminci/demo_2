@@ -1,132 +1,183 @@
 import 'package:flutter/material.dart';
+import 'dart:math' as math;
 
 void main() {
-  runApp(MyApp());
+  runApp(CalculatorApp());
 }
 
-class MyApp extends StatelessWidget {
+class CalculatorApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      home: Calculator(),
+      title: 'Engineering Calculator',
+      theme: ThemeData(
+        primarySwatch: Colors.blue,
+        visualDensity: VisualDensity.adaptivePlatformDensity,
+      ),
+      home: CalculatorScreen(),
     );
   }
 }
 
-class Calculator extends StatefulWidget {
+class CalculatorScreen extends StatefulWidget {
   @override
-  _CalculatorState createState() => _CalculatorState();
+  _CalculatorScreenState createState() => _CalculatorScreenState();
 }
 
-class _CalculatorState extends State<Calculator> {
-  String _expression = '';
-  String _result = '';
+class _CalculatorScreenState extends State<CalculatorScreen> {
+  String output = "0";
+  String _output = "0";
+  double num1 = 0.0;
+  double num2 = 0.0;
+  String operand = "";
 
-  void _onButtonPressed(String buttonText) {
-    setState(() {
-      if (buttonText == 'C') {
-        _expression = '';
-        _result = '';
-      } else if (buttonText == '=') {
-        try {
-          _result = _evaluateExpression();
-        } catch (e) {
-          _result = 'Error';
-        }
+  buttonPressed(String buttonText) {
+    if (buttonText == "C") {
+      _output = "0";
+      num1 = 0.0;
+      num2 = 0.0;
+      operand = "";
+    } else if (buttonText == "+" || buttonText == "-" || buttonText == "/" || buttonText == "*") {
+      num1 = double.parse(output);
+      operand = buttonText;
+      _output = "0";
+    } else if (buttonText == ".") {
+      if (_output.contains(".")) {
+        print("Already contains a decimal");
+        return;
       } else {
-        _expression += buttonText;
+        _output = _output + buttonText;
       }
+    } else if (buttonText == "=") {
+      num2 = double.parse(output);
+
+      switch (operand) {
+        case "+":
+          _output = (num1 + num2).toString();
+          break;
+        case "-":
+          _output = (num1 - num2).toString();
+          break;
+        case "/":
+          _output = (num1 / num2).toString();
+          break;
+        case "*":
+          _output = (num1 * num2).toString();
+          break;
+        case "sin":
+          _output = math.sin(num2).toString();
+          break;
+        case "cos":
+          _output = math.cos(num2).toString();
+          break;
+        case "tan":
+          _output = math.tan(num2).toString();
+          break;
+      }
+
+      num1 = 0.0;
+      num2 = 0.0;
+      operand = "";
+    } else if (buttonText == "sin" || buttonText == "cos" || buttonText == "tan") {
+      num1 = double.parse(output);
+      operand = buttonText;
+      _output = "0";
+    } else {
+      _output = _output + buttonText;
+    }
+
+    print(_output);
+
+    setState(() {
+      output = double.parse(_output).toStringAsFixed(2);
     });
   }
 
-  String _evaluateExpression() {
-    String expression = _expression;
-
-    // Replace 'x' with '*' and '÷' with '/'
-    expression = expression.replaceAll('x', '*').replaceAll('÷', '/');
-
-    // Use Dart's built-in 'dart:math' library to evaluate the expression
-    double result = evalExpression(expression);
-    return result.toString();
-  }
-
-  double evalExpression(String expression) {
-    try {
-      return double.parse(expression);
-    } catch (e) {
-      print('Error parsing expression: $e');
-      throw Exception('Error evaluating expression');
-    }
+  Widget buildButton(String buttonText) {
+    return Expanded(
+      child: OutlinedButton(
+        style: ButtonStyle(
+          padding: MaterialStateProperty.all(EdgeInsets.all(24.0)),
+          textStyle: MaterialStateProperty.all(TextStyle(
+            fontSize: 20.0,
+            fontWeight: FontWeight.bold,
+          )),
+        ),
+        onPressed: () => buttonPressed(buttonText),
+        child: Text(buttonText),
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Flutter Calculator'),
+        title: Text('Engineering Calculator'),
       ),
-      body: Column(
-        children: [
-          Expanded(
-            child: Container(
-              padding: EdgeInsets.all(16.0),
-              color: Colors.grey[200],
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: [
-                  Text(
-                    _expression,
-                    style: TextStyle(fontSize: 24.0),
-                  ),
-                  SizedBox(height: 10.0),
-                  Text(
-                    _result,
-                    style: TextStyle(fontSize: 48.0, fontWeight: FontWeight.bold),
-                  ),
-                ],
-              ),
-            ),
-          ),
-          Expanded(
-            flex: 2,
-            child: Container(
-              color: Colors.grey[300],
-              child: Column(
-                children: [
-                  buildButtonRow(['7', '8', '9', '÷']),
-                  buildButtonRow(['4', '5', '6', 'x']),
-                  buildButtonRow(['1', '2', '3', '-']),
-                  buildButtonRow(['0', 'C', '=', '+']),
-                ],
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget buildButtonRow(List<String> buttons) {
-    return Expanded(
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: buttons
-            .map(
-              (buttonText) => Expanded(
-            child: ElevatedButton(
-              onPressed: () => _onButtonPressed(buttonText),
+      body: Container(
+        child: Column(
+          children: <Widget>[
+            Container(
+              alignment: Alignment.centerRight,
+              padding: EdgeInsets.symmetric(vertical: 24.0, horizontal: 12.0),
               child: Text(
-                buttonText,
-                style: TextStyle(fontSize: 24.0),
-              ),
-              style: ElevatedButton.styleFrom(
-                primary: Colors.white,
-                onPrimary: Colors.black,
+                output,
+                style: TextStyle(
+                  fontSize: 48.0,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
             ),
-          ),
-        )
-            .toList(),
+            Expanded(
+              child: Divider(),
+            ),
+            Column(
+              children: <Widget>[
+                Row(
+                  children: <Widget>[
+                    buildButton("sin"),
+                    buildButton("cos"),
+                    buildButton("tan"),
+                    buildButton("/"),
+                  ],
+                ),
+                Row(
+                  children: <Widget>[
+                    buildButton("7"),
+                    buildButton("8"),
+                    buildButton("9"),
+                    buildButton("*"),
+                  ],
+                ),
+                Row(
+                  children: <Widget>[
+                    buildButton("4"),
+                    buildButton("5"),
+                    buildButton("6"),
+                    buildButton("-"),
+                  ],
+                ),
+                Row(
+                  children: <Widget>[
+                    buildButton("1"),
+                    buildButton("2"),
+                    buildButton("3"),
+                    buildButton("+"),
+                  ],
+                ),
+                Row(
+                  children: <Widget>[
+                    buildButton("."),
+                    buildButton("0"),
+                    buildButton("C"),
+                    buildButton("="),
+                  ],
+                ),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }
